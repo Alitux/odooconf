@@ -28,12 +28,12 @@ class LoggingEventHandler(FileSystemEventHandler):
                 parent_dir = os.path.abspath(os.path.dirname(event.src_path))
                 if parent_dir not in self.parent_paths:
                     self.parent_paths.add(parent_dir)
-                    console.log(f":heavy_plus_sign: Nueva carpeta de addons añadida: [green]{parent_dir}[/]")
+                    console.log(f":heavy_plus_sign: New addons folder added: [green]{parent_dir}[/]")
                     if self.odoo_conf_path:
                         update_paths_odoo_conf(
                             self.odoo_conf_path, ",".join(self.parent_paths)
                         )
-                        console.log(f":floppy_disk: Archivo [yellow]{self.odoo_conf_path}[/] actualizado.")
+                        console.log(f":floppy_disk: File [yellow]{self.odoo_conf_path}[/] updated.")
 
     def is_addon_directory(self, directory):
         return "__manifest__.py" in os.listdir(directory)
@@ -50,13 +50,13 @@ def monitoring_path(path: str, parent_paths: Set[str], odoo_conf_path: Optional[
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
     try:
-        console.print(f":mag: Monitoreando cambios en [bold]{path}[/]...")
+        console.print(f":mag: Monitoring changes in [bold]{path}[/]...")
         while observer.is_alive():
             observer.join(1)
     finally:
         observer.stop()
         observer.join()
-        console.print("[red]Watchdog detenido.[/]")
+        console.print("[red]Watchdog stopped.[/]")
 
 
 def find_addons_paths(base_path: str, internal_base_path: str = None, list_format: bool = False):
@@ -75,56 +75,56 @@ def find_addons_paths(base_path: str, internal_base_path: str = None, list_forma
 
 def update_paths_odoo_conf(odoo_conf_path: str, new_paths: str):
     if not os.path.exists(odoo_conf_path):
-        err_console.print(f"[bold red]✖ No se encontró el archivo odoo.conf en: {odoo_conf_path}[/]")
+        err_console.print(f"[bold red]✖ odoo.conf file not found at: {odoo_conf_path}[/]")
         raise typer.Exit(1)
 
     config = configparser.ConfigParser()
     files_read = config.read(odoo_conf_path)
     if not files_read:
-        err_console.print(f"[bold red]✖ No se pudo leer el archivo: {odoo_conf_path}[/]")
+        err_console.print(f"[bold red]✖ Could not read file: {odoo_conf_path}[/]")
         raise typer.Exit(1)
     if "options" not in config:
-        err_console.print(f"[bold red]✖ La sección [options] no fue encontrada en el archivo odoo.conf[/]")
+        err_console.print(f"[bold red]✖ [options] section not found in odoo.conf file[/]")
         raise typer.Exit(1)
 
-    addons_path_actual = config["options"].get("addons_path", "")
-    rutas_actuales = set(addons_path_actual.split(",")) if addons_path_actual else set()
-    rutas_actuales.update(new_paths.split(","))
+    current_addons_path = config["options"].get("addons_path", "")
+    current_paths = set(current_addons_path.split(",")) if current_addons_path else set()
+    current_paths.update(new_paths.split(","))
 
-    config["options"]["addons_path"] = ",".join(sorted(rutas_actuales))
+    config["options"]["addons_path"] = ",".join(sorted(current_paths))
     with open(odoo_conf_path, "w") as configfile:
         config.write(configfile)
 
-    console.print(f":white_check_mark: [green]odoo.conf actualizado correctamente.[/]")
+    console.print(f":white_check_mark: [green]odoo.conf updated successfully.[/]")
 
 
-def resolver_ruta_odoo_conf(entrada: Optional[str]) -> Optional[str]:
-    if not entrada:
+def resolve_odoo_conf_path(entry: Optional[str]) -> Optional[str]:
+    if not entry:
         return None
 
-    if os.path.isdir(entrada):
-        posible_ruta = os.path.join(entrada, "odoo.conf")
-        if os.path.exists(posible_ruta):
-            return posible_ruta
-        err_console.print(f"[bold red]✖ No se encontró 'odoo.conf' en el directorio: {entrada}[/]")
+    if os.path.isdir(entry):
+        possible_path = os.path.join(entry, "odoo.conf")
+        if os.path.exists(possible_path):
+            return possible_path
+        err_console.print(f"[bold red]✖ 'odoo.conf' not found in directory: {entry}[/]")
         raise typer.Exit(1)
 
-    elif os.path.isfile(entrada):
-        return entrada
+    elif os.path.isfile(entry):
+        return entry
 
-    err_console.print(f"[bold red]✖ La ruta proporcionada no es válida: {entrada}[/]")
+    err_console.print(f"[bold red]✖ The provided path is not valid: {entry}[/]")
     raise typer.Exit(1)
 
 def estimate_workers(users: int = None) -> int:
     """
-    Estima el número de workers a partir de la cantidad de usuarios
+    Estimates the number of workers based on the number of users
     """ 
     max_workers = (2 + psutil.cpu_count()) + 1
     workers = max((int(users) // 6) + 1, 1)
-    console.print(f":gear: [green]Para [bold]{users}[/bold] usuarios se necesitan [bold]{workers}[/bold] workers[/]")
+    console.print(f":gear: [green]For [bold]{users}[/bold] users, [bold]{workers}[/bold] workers are needed[/]")
     if workers > max_workers:
-        console.print(f"[bold yellow]✖ El número de workers no puede ser mayor a {max_workers}[/]")
-        console.print(f"[bold green]✔ Se redefine el valor de workers a {max_workers}[/]")
+        console.print(f"[bold yellow]✖ The number of workers cannot be greater than {max_workers}[/]")
+        console.print(f"[bold green]✔ The value of workers is redefined to {max_workers}[/]")
         workers = max_workers
     if not users:
         workers = 2
@@ -132,22 +132,23 @@ def estimate_workers(users: int = None) -> int:
         workers = 2
     return workers
 
+
 def generate_admin_passwd_hash(password:str) -> str:
-    """Genera un hash de contraseña para el usuario admin."""
+    """Generates a password hash for the admin user."""
     pwd_context = CryptContext(schemes=["pbkdf2_sha512"], deprecated="auto")
     return pwd_context.hash(password)
 
 @app.command()
 def new(
-    odoo_conf: str = typer.Argument(...,help="Ruta donde se generará el nuevo odoo.conf"),
-    users: Optional[int] = typer.Option(None, help="Cantidad de usuarios concurrentes esperados"),
+    odoo_conf: str = typer.Argument(...,help="Path where the new odoo.conf will be generated"),
+    users: Optional[int] = typer.Option(None, help="Number of expected concurrent users"),
     ):
 
-    """Genera un nuevo archivo odoo.conf con configuraciones base"""
+    """Generates a new odoo.conf file with base configurations"""
     
-    ruta = os.path.join(odoo_conf, "odoo.conf")
-    if os.path.exists(ruta):
-        err_console.print((f"[bold red]✖ El archivo ya existe: {ruta}[/]"))
+    path = os.path.join(odoo_conf, "odoo.conf")
+    if os.path.exists(path):
+        err_console.print(f"[bold red]✖ File already exists: {path}[/]")
         raise typer.Exit(1)
     config = configparser.ConfigParser()
     config["options"] = {
@@ -163,60 +164,60 @@ def new(
     }
 
     os.makedirs(odoo_conf, exist_ok=True)
-    with open(ruta, "w") as f:
+    with open(path, "w") as f:
         config.write(f)
-    console.print(f":sparkles: Archivo [yellow]{ruta}[/yellow] generado correctamente con configuración base.")
-    console.print(f":bulb: [green] Para optimizar ver las opciones disponibles con:[/] [magenta]odooconf server --help[/]")
+    console.print(f":sparkles: File [yellow]{path}[/yellow] generated successfully with base configuration.")
+    console.print(f":bulb: [green] To optimize, see the available options with:[/] [magenta]odooconf server --help[/]")
 
 @app.command()
 def paths(
-    base_addons_dir: str = typer.Argument(..., help="Ruta base de los addons"),
-    internal_path: str = typer.Option(None, "--internal-path", help="Ruta base interna (Ideal para docker)"), 
-    watchdog: bool = typer.Option(False, "--watchdog", help="Activar watchdog para odoo.conf dinámico"),
-    odoo_conf: Optional[str] = typer.Option(None, "--odoo-conf", help="Ruta del archivo o carpeta que contiene odoo.conf"),
+    base_addons_dir: str = typer.Argument(..., help="Base path for addons"),
+    internal_path: str = typer.Option(None, "--internal-path", help="Internal base path (Ideal for docker)"), 
+    watchdog: bool = typer.Option(False, "--watchdog", help="Activate watchdog for dynamic odoo.conf"),
+    odoo_conf: Optional[str] = typer.Option(None, "--odoo-conf", help="Path to the file or folder containing odoo.conf"),
 ):
     """
-    Busca rutas de addons en Odoo y puede actualizar el odoo.conf dinámicamente si se activa --watchdog.
+    Searches for Odoo addon paths and can dynamically update odoo.conf if --watchdog is activated.
     """
-    odoo_conf_ruta = resolver_ruta_odoo_conf(odoo_conf) if odoo_conf else None
+    odoo_conf_path = resolve_odoo_conf_path(odoo_conf) if odoo_conf else None
     paths = find_addons_paths(base_addons_dir, internal_base_path=internal_path, list_format=True)
     if internal_path:
-        console.print(f":open_file_folder: [cyan]Ruta interna[/cyan] [yellow]{internal_path}[/yellow] como base para paths")
+        console.print(f":open_file_folder: [cyan]Internal path[/cyan] [yellow]{internal_path}[/yellow] as base for paths")
     if watchdog:
-        monitoring_path(base_addons_dir, paths, odoo_conf_ruta)
+        monitoring_path(base_addons_dir, paths, odoo_conf_path)
     else:
         addons_str = ",".join(sorted(paths))
-        if odoo_conf_ruta:
-            update_paths_odoo_conf(odoo_conf_ruta, addons_str)
-            console.print(f":floppy_disk: [green]Archivo [yellow]{odoo_conf_ruta}[/yellow] actualizado.[/green]")
+        if odoo_conf_path:
+            update_paths_odoo_conf(odoo_conf_path, addons_str)
+            console.print(f":floppy_disk: [green]File [yellow]{odoo_conf_path}[/yellow] updated.[/green]")
         console.print(f"[green]{addons_str}[/green]")
 
 @app.command()
 def server(
-    odoo_conf: str = typer.Argument(..., help="Ruta al archivo odoo.conf"),
-    users: Optional[int] = typer.Option(None, help="Cantidad de usuarios concurrentes esperados"),
-    ram: Optional[int] = typer.Option(None, help="RAM total del servidor en GB (opcional)"),
-    auto_ram: Optional[bool] = typer.Option(False, help="Calcular automáticamente el valor de RAM"),
-    hide_db: Optional[bool] = typer.Option(False, help="Ocultar lista base de datos"),
-    time_cpu: Optional[int] = typer.Option(None, help="Tiempo máximo en segundos de CPU que una petición puede consumir"),
-    time_real: Optional[int] = typer.Option(None, help="Tiempo máximo en tiempo real (wall time) que una petición puede durar"),
-    admin_passwd: Optional[str] = typer.Option(None, help="Contraseña plana para el usuario admin"),
-    db_host: Optional[str] = typer.Option(None, help="Host del servidor de base de datos"),
-    db_port: Optional[int] = typer.Option(None, help="Puerto del servidor de base de datos"), 
-    db_user: Optional[str] = typer.Option(None, help="Usuario del servidor de base de datos"),
-    db_password: Optional[str] = typer.Option(None, help="Contraseña del servidor de base de datos"),
+    odoo_conf: str = typer.Argument(..., help="Path to the odoo.conf file"),
+    users: Optional[int] = typer.Option(None, help="Number of expected concurrent users"),
+    ram: Optional[int] = typer.Option(None, help="Total server RAM in GB (optional)"),
+    auto_ram: Optional[bool] = typer.Option(False, help="Automatically calculate the RAM value"),
+    hide_db: Optional[bool] = typer.Option(False, help="Hide database list"),
+    time_cpu: Optional[int] = typer.Option(None, help="Maximum CPU time in seconds that a request can consume"),
+    time_real: Optional[int] = typer.Option(None, help="Maximum real time (wall time) that a request can last"),
+    admin_passwd: Optional[str] = typer.Option(None, help="Plain password for the admin user"),
+    db_host: Optional[str] = typer.Option(None, help="Database server host"),
+    db_port: Optional[int] = typer.Option(None, help="Database server port"), 
+    db_user: Optional[str] = typer.Option(None, help="Database server user"),
+    db_password: Optional[str] = typer.Option(None, help="Database server password"),
 
 ):
     """
-    Calcula y actualiza automáticamente los workers y límites de memoria en odoo.conf
-    según la cantidad de usuarios y memoria disponible.
+    Automatically calculates and updates workers and memory limits in odoo.conf
+    according to the number of users and available memory.
     """
-    path = resolver_ruta_odoo_conf(odoo_conf)
+    path = resolve_odoo_conf_path(odoo_conf)
     config = configparser.ConfigParser()
     config.read(path)
 
     if "options" not in config:
-        err_console.print("[bold red]✖ La sección [options] no fue encontrada en odoo.conf[/]")
+        err_console.print("[bold red]✖ [options] section not found in odoo.conf[/]")
         raise typer.Exit(1)
     if users: 
         workers = estimate_workers(users)
@@ -224,26 +225,26 @@ def server(
         workers = 2
 
     config["options"]["workers"] = str(workers)
-    config["options"]["max_cron_threads"] = "1"  # valor recomendado
+    config["options"]["max_cron_threads"] = "1"  # recommended value
     
-    console.print(f":rocket: [green]{workers} workers[/] establecidos en [yellow]{path}[/yellow]")
+    console.print(f":rocket: [green]{workers} workers[/] set in [yellow]{path}[/yellow]")
 
     if admin_passwd:
         password = str(generate_admin_passwd_hash(admin_passwd))
         config["options"]["admin_passwd"] = password
-        console.print(f":lock: [green]Hash generado:[/] [cyan]{password}[/]")
+        console.print(f":lock: [green]Hash generated:[/] [cyan]{password}[/]")
 
     if hide_db:
         config["options"]["list_db"] = "False"
-        console.print(f":lock: [green]Lista base de datos ocultada.[/]")
+        console.print(f":lock: [green]Database list hidden.[/]")
 
     if time_cpu:
         config["options"]["limit_time_cpu"] = str(time_cpu)
-        console.print(f":clock3: limit_time_cpu: [cyan]{time_cpu} segundos[/]")
+        console.print(f":clock3: limit_time_cpu: [cyan]{time_cpu} seconds[/]")
 
     if time_real:
         config["options"]["limit_time_real"] = str(time_real)
-        console.print(f":hourglass: limit_time_real: [cyan]{time_real} segundos[/]")
+        console.print(f":hourglass: limit_time_real: [cyan]{time_real} seconds[/]")
 
     if db_host:
         config["options"]["db_host"] = db_host
@@ -259,7 +260,7 @@ def server(
 
     if db_password:
         config["options"]["db_password"] = db_password
-        console.print(f":key: db_password: [red]********[/] (oculto)")
+        console.print(f":key: db_password: [red]********[/] (hidden)")
 
     if ram or auto_ram:
         ram = psutil.virtual_memory().total if auto_ram else ram*1024**3
@@ -270,11 +271,11 @@ def server(
         config["options"]["limit_memory_soft"] = str(limit_soft)
         config["options"]["limit_memory_hard"] = str(limit_hard)
         
-        #Solo para consola
+        #For console only
         limit_soft_gb = round((limit_soft / 1024 ** 2), 2)
         limit_hard_gb = round((limit_hard / 1024 ** 2), 2)
         
-        console.print(f":gear: RAM total: [cyan]{round((ram/1024**3),2)} GB[/] => [green]{workers} workers[/]")
+        console.print(f":gear: Total RAM: [cyan]{round((ram/1024**3),2)} GB[/] => [green]{workers} workers[/]")
         console.print(f":gear: limit_memory_soft: [yellow]{limit_soft_gb} MB[/], limit_memory_hard: [yellow]{limit_hard_gb} MB[/]")
     with open(path, "w") as f:
         config.write(f)
