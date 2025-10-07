@@ -11,7 +11,7 @@ from typing import Optional, Set
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-app = typer.Typer()
+app = typer.Typer(help="CLI tool for easy managing and optimizing Odoo configurations (`odoo.conf`)")
 console = Console()
 err_console = Console(stderr=True)
 

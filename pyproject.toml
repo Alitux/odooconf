@@ -1,11 +1,24 @@
 [project]
 name = "odooconf"
 version = "0.1.4"
-description = ""
+description = "CLI tool for managing and optimizing Odoo configurations (`odoo.conf`)"
 authors = [
     {name = "Alitux",email = "alitux@disroot.org"}
 ]
-license = {text = "GNU/GPLV2"}
+repository = "https://github.com/Alitux/odooconf"
+keywords = ["odoo", "config", "cli", "configuration", "tool"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Utilities",
+]
+license = {text = "GNU/GPLV3"}
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -16,6 +29,10 @@ dependencies = [
 ]
 [tool.poetry.scripts]
 odooconf = "odooconf.src.odooconf.main:app"
+oc = "odooconf.src.odooconf.main:app"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+[project.urls]
+"Homepage" = "https://github.com/Alitux/odooconf"
+"Bug Tracker" = "https://github.com/Alitux/odooconf/issues"

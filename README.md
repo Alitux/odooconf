@@ -9,12 +9,12 @@ CLI tool for managing and optimizing Odoo configurations (`odoo.conf`).
 
 ### Option 1: Install with pip
 ```bash
-pip install git+https://github.com/Alitux/odooconf.git
+pip install odooconf
 ```
 
 ### Option 2: Install with pipx (recommended for isolation)
 ```bash
-pipx install git+https://github.com/Alitux/odooconf.git
+pipx install odooconf
 ```
 ### 🔧 Key Features
 
@@ -97,9 +97,13 @@ odooconf server /etc/odoo.conf \
   --db-port 5433
 ```
 
+## Alias
+
+**The utility can be used as an alias for the command `oc` or `odooconf`.**
+
 ## 📄 License
 
-This project is licensed under the GNU GPLv2.
+This project is licensed under the GNU GPLv3.
 
 ## 🌍 Repository
 
